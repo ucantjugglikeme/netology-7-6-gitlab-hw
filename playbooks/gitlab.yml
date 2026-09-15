@@ -1,0 +1,68 @@
+---
+- name: Install GitLab in Ubuntu VM
+  gather_facts: true
+  gather_subset:
+    - '!all'
+    - 'min'
+    - 'distribution'
+  hosts: gitlab
+  vars:
+    ansible_ssh_user: user
+  become: true
+
+  pre_tasks:
+    - name: Wait for vm to become reachable
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 300
+
+  tasks:
+    - name: Ensure keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download GitLab GPG key
+      ansible.builtin.get_url:
+        url: https://packages.gitlab.com/gpgkey/gpg.key
+        dest: /tmp/gitlab-ce.key.asc
+        mode: '0644'
+
+    - name: Create GitLab GPG key file
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/gitlab_gitlab-ce-archive-keyring.gpg
+        state: touch
+        mode: '0644'
+
+    - name: Dearmor GitLab GPG key to binary format for apt
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/gitlab-ce.key.asc > /etc/apt/keyrings/gitlab_gitlab-ce-archive-keyring.gpg
+
+    - name: Remove temporary GPG key file
+      ansible.builtin.file:
+        path: /tmp/gitlab-ce.key.asc
+        state: absent
+
+    - name: Add GitLab repository to sources list
+      ansible.builtin.get_url:
+        url: "https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/{{ ansible_distribution | lower }}/{{ ansible_distribution_release }}/config_file.list"
+        dest: /etc/apt/sources.list.d/gitlab_gitlab-ce.list
+        mode: '0644'
+
+    - name: Install GitLab CE
+      ansible.builtin.apt:
+        name: gitlab-ce
+        state: present
+        update_cache: yes
+      environment:
+        EXTERNAL_URL: "http://{{ inventory_hostname }}"
+
+    - name: Check GitLab services status
+      ansible.builtin.command: gitlab-ctl status
+      register: gitlab_status
+      changed_when: false
+
+    - name: Display GitLab status output
+      ansible.builtin.debug:
+        var: gitlab_status.stdout_lines

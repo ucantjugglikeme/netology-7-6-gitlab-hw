@@ -1,0 +1,16 @@
+#cloud-config
+users:
+  - name: user
+    groups: sudo
+    shell: /bin/bash
+    sudo: 'ALL=(ALL) NOPASSWD:ALL'
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbkja1ZUvD9iKdke/boIfEzK+kWI3mTX3JuYi9Col54 stanislav@ubuntu24-hw13
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/keepalive.conf
+    permissions: '0644'
+    owner: root:root
+    content: |
+      ClientAliveInterval 60
+      ClientAliveCountMax 60
