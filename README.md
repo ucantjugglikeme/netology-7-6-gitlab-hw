@@ -36,5 +36,89 @@
 ### Задание 2
 
 1. Склонируем репозиторий с исходным кодом на управляющую ВМ. Добавим в качестве удалённого репозитория ВМ с GitLab.
+2. Создадим файл .gitlab-ci.yml, в котором опишем запуск теста кода на Go и сборку приложения на Go.
+3. Отправим коммит и пуш с новым файлом в репозиторий GitLab. Проверим выполнение сборки.
+
+Файл .gitlab-ci.yml:
+
+```YAML
+stages:
+  - test
+  - build
+
+test_go:
+  stage: test
+  image: golang:1.17
+  script:
+   - go test .
+  tags:
+   - netology
+   - hw
+
+build_go_app:
+  stage: build
+  image: docker:latest
+  script:
+   - docker build .
+  tags:
+   - netology
+   - hw
+```
 
 ![Добавление удалённого репозитория](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img12.png)
+
+![Отправка изменений на репозиторий GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img13.png)
+
+![Репозиторий GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img14.png)
+
+![Выполнение сборки в GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img15.png)
+
+
+---
+
+### Задание 3
+
+1. Изменим CI так, чтобы тесты запускались только при изменении .go файлов и сборка запускалась не дожидаясь окончания тестов.
+2. Отправим изменения в репозиторий GitLab и проверим выполнение сборки.
+3. Изменим файл main.go и отправим изменения, чтобы проверить работу этапов CI.
+4. После работы освободим все ресурсы.
+
+Файл .gitlab-ci.yml:
+
+```YAML
+stages:
+  - test
+  - build
+
+test_go:
+  stage: test
+  image: golang:1.17
+  script:
+   - go test .
+  tags:
+   - netology
+   - hw
+  rules:
+   - changes:
+      - "**/*.go"
+
+build_go_app:
+  stage: build
+  image: docker:latest
+  needs: []
+  script:
+   - docker build .
+  tags:
+   - netology
+   - hw
+```
+
+![Отправка изменений на репозиторий GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img16.png)
+
+![Выполнение сборки в GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img17.png)
+
+![Изменение .go файлов](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img18.png)
+
+![Выполнение сборки в GitLab](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img19.png)
+
+![Удаление ресурсов](https://github.com/ucantjugglikeme/netology-7-6-gitlab-hw/blob/main/img/img20.png)
